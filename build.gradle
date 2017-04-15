@@ -1,0 +1,19 @@
+group 'org.polykek'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+//Плагин java содержит в себе задачи, как jar — собрать jar архив, compileJava — скомпилировать исходные коды и др.
+apply plugin: 'application'
+//Плагин application содержит в себе задачи: run — запуск приложения; installApp — установка приложения на компьютер
+
+sourceCompatibility = 1.5
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.11'
+    compile group: 'args4j',name: 'args4j',version: '2.0.25'
+    compile group: 'args4j',name: 'args4j-site',version: '2.0.25'
+}
