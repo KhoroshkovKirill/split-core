@@ -32,7 +32,7 @@ public class Main {
     private String nameOfOutFiles;
 
     @Argument(required = true, index = 3, usage = "Имя входного файла")
-    private String nameOfInFile;
+    private String nameOfInFile;//index все портит
 
     public static void main(String[] args) throws IOException {
         try {

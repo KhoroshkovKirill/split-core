@@ -6,7 +6,7 @@ import java.io.*;
 final class Split {
     final private boolean numberFormat;
     final private boolean sizeInLines;//\
-    final private boolean sizeInChars;//-одно из трех
+    final private boolean sizeInChars;//-одно из трех(или не одного)
     final private boolean countOfFiles;//
     final private int size;
     final private boolean ofile;
@@ -59,32 +59,39 @@ final class Split {
         BufferedReader br = new BufferedReader(new FileReader(this.nameOfInFile));
         String str;
         int number = 0;
-        Integer numFile = 1;
-        BufferedWriter bw = new BufferedWriter(new FileWriter(out + "1"));
+        Integer numFile = 0;
+        BufferedWriter bw = new BufferedWriter(new FileWriter(out + "1" + ".txt"));
         while ((str = br.readLine()) != null) {
-            number++;
-            if (numFile == number / size + 1) {
+            if (numFile < number / size + 1) {
                 numFile = number / size + 1;
-                bw = new BufferedWriter(new FileWriter(out + numFile.toString()));
+                bw.close();
+                bw = new BufferedWriter(new FileWriter(out + numFile.toString() + ".txt"));
+            }
+            else{
+                bw.newLine();
             }
             bw.write(str);
+            number++;
         }
+        bw.close();
     }
 
     public void writeInFilesIfSizeInChars(String out, int size) throws IOException {
         BufferedReader br = new BufferedReader(new FileReader(this.nameOfInFile));
         int ch;
         int number = 0;
-        Integer numFile = 1;
-        BufferedWriter bw = new BufferedWriter(new FileWriter(out + "1"));
+        Integer numFile = 0;
+        BufferedWriter bw = new BufferedWriter(new FileWriter(out + "1" + ".txt"));
         while ((ch = br.read()) != -1) {
-            number++;
-            if (numFile == number / size + 1) {
+            if (numFile < number / size + 1) {
                 numFile = number / size + 1;
-                bw = new BufferedWriter(new FileWriter(out + numFile.toString()));
+                bw.close();
+                bw = new BufferedWriter(new FileWriter(out + numFile.toString() + ".txt"));
             }
             bw.write(ch);
+            number++;
         }
+        bw.close();
     }
 
     public int lengthOfFile(String nameOfFile) throws IOException{
