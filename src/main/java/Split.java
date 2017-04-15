@@ -1,4 +1,5 @@
 import java.io.*;
+import java.text.Format;
 
 /**
  * Created by khoroshkovkirill on 01.04.17.
@@ -81,12 +82,12 @@ final class Split {
         int ch;
         int number = 0;
         Integer numFile = 0;
-        BufferedWriter bw = new BufferedWriter(new FileWriter(out + "1" + ".txt"));
+        BufferedWriter bw = new BufferedWriter(new FileWriter(out + numFormat(1) + ".txt"));
         while ((ch = br.read()) != -1) {
             if (numFile < number / size + 1) {
                 numFile = number / size + 1;
                 bw.close();
-                bw = new BufferedWriter(new FileWriter(out + numFile.toString() + ".txt"));
+                bw = new BufferedWriter(new FileWriter(out + numFormat(numFile) + ".txt"));
             }
             bw.write(ch);
             number++;
@@ -101,5 +102,25 @@ final class Split {
             length++;
         }
         return length;
+    }
+
+    public String numFormat(Integer d) {
+        if (this.numberFormat) {
+            return d.toString();
+        } else {
+            StringBuilder sb = new StringBuilder();
+            int dd = d - 1;
+            if (d == 1){
+                sb.append("a");
+            }
+            while (dd != 0) {
+                sb.append((char) ((dd % 26) + 97));
+                dd = dd / 26;
+            }
+            if (d < 27) {
+                sb.append("a");
+            }
+            return sb.reverse().toString();
+        }
     }
 }
