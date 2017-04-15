@@ -61,12 +61,12 @@ final class Split {
         String str;
         int number = 0;
         Integer numFile = 0;
-        BufferedWriter bw = new BufferedWriter(new FileWriter(out + "1" + ".txt"));
+        BufferedWriter bw = new BufferedWriter(new FileWriter(out + numFormat(1) + ".txt"));
         while ((str = br.readLine()) != null) {
             if (numFile < number / size + 1) {
                 numFile = number / size + 1;
                 bw.close();
-                bw = new BufferedWriter(new FileWriter(out + numFile.toString() + ".txt"));
+                bw = new BufferedWriter(new FileWriter(out + numFormat(numFile) + ".txt"));
             }
             else{
                 bw.newLine();
