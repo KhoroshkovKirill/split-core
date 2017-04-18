@@ -7,32 +7,26 @@ import java.io.IOException;
 
 public class Main {
 
-    @Argument(required = true, usage = "Command")
+    @Argument(required = true,usage = "Command")
     private String command;
 
     @Option(name = "-d",usage = "Выходные файлы следует называть “ofile1, ofile2, ofile3, ofile4 …”")
     private boolean numberFormat;
 
     @Option(name = "-l",usage = "Размер выходных файлов в строчках")
-    private boolean sizeInLines;
+    private int sizeInLines;
 
-    @Option(name = "-c",usage = "Размер выходных файлах в символах")
-    private boolean sizeInChars;
+    @Option(name = "-c",usage = "Размер выходных файлов в символах")
+    private int sizeInChars;
 
     @Option(name = "-n",usage = "Количество выходных файлов")
-    private boolean countOfFiles;
-
-    @Argument(required = false, index = 1, usage = "Размер выходного файла")
-    private int size;
+    private int countOfFiles;
 
     @Option(name = "-o",usage = "Задаёт базовое имя выходного файла")
-    private boolean ofile;
-
-    @Argument(required = false, index = 2, usage = "Имя выходного файла")
     private String nameOfOutFiles;
 
-    @Argument(required = true, index = 3, usage = "Имя входного файла")
-    private String nameOfInFile;//index все портит
+    @Argument(required = true, index = 1, usage = "Имя входного файла")
+    private String nameOfInFile;
 
     public static void main(String[] args) throws IOException {
         try {
@@ -44,15 +38,15 @@ public class Main {
             System.exit(65);
         }
         catch (IOException ex){
-            System.out.println("Ошибка чтения файла");
+            System.out.println("Ошибка чтения файла: " + ex.getLocalizedMessage() + " (IOException)");
             System.exit(74);
         }
         catch (CmdLineException ex){
-            System.out.println("Ошибка чтения командной строки");
+            System.out.println("Ошибка чтения командной строки: " + ex.getLocalizedMessage() + " (CmdLineException)");
             System.exit(64);
         }
         catch (Exception ex){
-            System.out.println("Беда");
+            System.out.println("Беда: " + ex.getLocalizedMessage() + " (Exception)");
             System.exit(-1);
         }
     }
@@ -60,8 +54,7 @@ public class Main {
     private void doSplit(String[] args) throws CmdLineException, IOException {
         CmdLineParser parser = new CmdLineParser(this);
         parser.parseArgument(args);
-        Split splitObj = new Split(numberFormat, sizeInLines, sizeInChars, countOfFiles,
-                size, ofile, nameOfOutFiles, nameOfInFile);
+        Split splitObj = new Split(numberFormat, sizeInLines, sizeInChars, countOfFiles, nameOfOutFiles, nameOfInFile);
         splitObj.writeInFiles();
     }
 
