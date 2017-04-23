@@ -38,7 +38,7 @@ public class Main {
             System.exit(65);
         }
         catch (IOException ex){
-            System.out.println("Ошибка чтения файла: " + ex.getLocalizedMessage() + " (IOException)");
+            System.out.println("Ошибка чтения/записи файла: " + ex.getLocalizedMessage() + " (IOException)");
             System.exit(74);
         }
         catch (CmdLineException ex){

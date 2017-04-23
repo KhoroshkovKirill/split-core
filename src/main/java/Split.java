@@ -4,115 +4,143 @@ import java.io.*;
  * Created by khoroshkovkirill on 01.04.17.
  */
 final class Split {
-    final private boolean numberFormat;
-    final private int sizeInLines;//\
-    final private int sizeInChars;//-одно из трех(или не одного)
-    final private int countOfFiles;//
+    final private boolean numberFormat;// -d
+    final private int sizeOfOutFile;
+    final private boolean dimension;//true -> sizeInLines, false -> sizeInChars
+    final private int countOfDigits;
     final private String nameOfOutFiles;
     final private String nameOfInFile;
+    final private int countOfFiles;
 
     Split(boolean numberFormat, int sizeInLines, int sizeInChars, int countOfFiles,
-                 String nameOfOutFiles, String nameOfInFile) {
+                 String nameOfOutFiles, String nameOfInFile) throws IOException {
         if (sizeInChars != 0 && sizeInLines != 0 || sizeInChars != 0 && countOfFiles != 0 ||
                 sizeInLines != 0 && countOfFiles != 0){
             throw new IllegalArgumentException("Не может быть задано несколько вариантов деления файла одновременно");
         }
         this.numberFormat = numberFormat;
-        this.sizeInLines = sizeInLines;
-        this.sizeInChars = sizeInChars;
-        this.countOfFiles = countOfFiles;
-        this.nameOfOutFiles = nameOfOutFiles;
         this.nameOfInFile = nameOfInFile;
+        //Имена выходных файлов:
+        if (nameOfOutFiles == null) {
+            this.nameOfOutFiles = "x";
+        } else {
+            if (nameOfOutFiles.equals("-")) {
+                this.nameOfOutFiles = this.nameOfInFile.substring(0, this.nameOfInFile.indexOf("."));
+            } else {
+                this.nameOfOutFiles = nameOfOutFiles;
+            }
+        }
+        //Размер выходных файлов:
+        if (countOfFiles != 0) {
+            this.dimension = false;
+            int length = lengthOfFile();
+            this.sizeOfOutFile = (length % countOfFiles) > 0 ?  (length / countOfFiles + 1) : (length / countOfFiles);
+            this.countOfFiles = countOfFiles;
+        } else {
+            if (sizeInChars != 0) {
+                this.dimension = false;
+                this.sizeOfOutFile = sizeInChars;
+            } else if (sizeInLines != 0) {
+                this.dimension = true;
+                this.sizeOfOutFile = sizeInLines;
+            } else {
+                this.dimension = true;
+                this.sizeOfOutFile = 100;
+            }
+            int length = lengthOfFile();
+            this.countOfFiles = length % sizeOfOutFile > 0 ?  length / sizeOfOutFile + 1 : length / sizeOfOutFile;
+        }
+        //Количество разрядов в нумерации выходных файлов:
+        this.countOfDigits = digitNumber(this.countOfFiles);
     }
 
     void writeInFiles() throws IOException{
-        //Название выходных файлов
-        String out;
-        if (this.nameOfOutFiles == null){
-            out = "x";
-        }
-        else{
-            if (this.nameOfOutFiles.equals("-")){
-                out = this.nameOfInFile.substring(0,this.nameOfInFile.indexOf("."));
-            }
-            else{
-                out = this.nameOfOutFiles;
-            }
-        }
-        //Чтение и запись
-        if (this.sizeInLines == 0 && this.countOfFiles == 0 && this.sizeInChars == 0)
-            writeInFilesIfSizeInLines(out, 100);
-        if (this.sizeInLines != 0)
-            writeInFilesIfSizeInLines(out, this.sizeInLines);
-        if (this.countOfFiles != 0)
-            writeInFilesIfSizeInChars(out, this.lengthOfFile(nameOfInFile) / this.countOfFiles + 1);
-        if (this.sizeInChars != 0)
-            writeInFilesIfSizeInChars(out, this.sizeInChars);
-    }
-
-    private void writeInFilesIfSizeInLines(String out, int size) throws IOException{
         BufferedReader br = new BufferedReader(new FileReader(this.nameOfInFile));
-        String str;
-        int i = 0;
-        int numFile = 0;
-        BufferedWriter bw = new BufferedWriter(new FileWriter(out + numFormat(1) + ".txt"));
-        while ((str = br.readLine()) != null) {
-            if (numFile < i / size + 1) {
-                numFile = i / size + 1;
+        if (this.dimension){
+            String str;
+            for (int num = 1; num <= this.countOfFiles; num++) {
+                BufferedWriter bw = new BufferedWriter(new FileWriter(this.nameOfOutFiles + numFormat(num) + ".txt"));
+                bw.write(br.readLine());
+                for (int i = 1; i < this.sizeOfOutFile; i++) {
+                    if ((str = br.readLine()) != null) {
+                        bw.newLine();
+                        bw.write(str);
+                    } else {
+                        break;
+                    }
+                }
                 bw.close();
-                bw = new BufferedWriter(new FileWriter(out + numFormat(numFile) + ".txt"));
             }
-            else{
-                bw.newLine();
-            }
-            bw.write(str);
-            i++;
         }
-        bw.close();
+        else {
+            int ch;
+            for (int num = 1; num <= this.countOfFiles; num++) {
+                BufferedWriter bw = new BufferedWriter(new FileWriter(this.nameOfOutFiles + numFormat(num) + ".txt"));
+                for (int i = 0; i < this.sizeOfOutFile; i++) {
+                    if ((ch = br.read()) != -1) {
+                        bw.write(ch);
+                    } else {
+                        break;
+                    }
+                }
+                bw.close();
+            }
+        }
     }
 
-    private void writeInFilesIfSizeInChars(String out, int size) throws IOException {
-        BufferedReader br = new BufferedReader(new FileReader(this.nameOfInFile));
-        int ch;
-        int i = 0;
-        int numFile = 0;
-        BufferedWriter bw = new BufferedWriter(new FileWriter(out + numFormat(1) + ".txt"));
-        while ((ch = br.read()) != -1) {
-            if (numFile < i / size + 1) {
-                numFile = i / size + 1;
-                bw.close();
-                bw = new BufferedWriter(new FileWriter(out + numFormat(numFile) + ".txt"));
-            }
-            bw.write(ch);
-            i++;
-        }
-        bw.close();
-    }
-
-    private int lengthOfFile(String nameOfFile) throws IOException{
+    private int lengthOfFile() throws IOException{
         int length = 0;
-        BufferedReader br = new BufferedReader (new FileReader(nameOfFile));
-        while(br.read()!=-1){
-            length++;
+        BufferedReader br = new BufferedReader (new FileReader(this.nameOfInFile));
+        if (this.dimension) {
+            while (br.readLine() != null) {
+                length++;
+            }
+        }
+        else {
+            while (br.read() != -1) {
+                length++;
+            }
         }
         return length;
     }
 
-    private String numFormat(Integer d) {
+    private int digitNumber(int num){
+        int count = 0;
         if (this.numberFormat) {
-            return d.toString();
+            do {
+                num /= 10;
+                count++;
+            } while (num > 0);
         }
         else {
-            StringBuilder sb = new StringBuilder();
-            int dd = d - 1;
-            if (d == 1){
+            num--;//т.к. нумерация с нуля('a')
+            do {
+                num /= 26;// a-z
+                count++;
+            } while (num > 0);
+        }
+        return count;
+    }
+
+    private String numFormat(Integer num) {// формат x/0x/00x...
+        StringBuilder sb = new StringBuilder();
+        if (this.numberFormat) {
+            for (int i = digitNumber(num); i < this.countOfDigits; i++){
+                sb.append("0");
+            }
+            sb.append(num.toString());
+            return sb.toString();
+        }
+        else {
+            num--;
+            if (num == 0){
                 sb.append("a");
             }
-            while (dd != 0) {
-                sb.append((char) ((dd % 26) + 97));
-                dd = dd / 26;
+            while (num != 0) {
+                sb.append((char) ((num % 26) + 97));
+                num /= 26;
             }
-            if (d < 27) {
+            for (int i = sb.length(); i < this.countOfDigits; i++) {
                 sb.append("a");
             }
             return sb.reverse().toString();
