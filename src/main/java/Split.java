@@ -6,7 +6,7 @@ import java.io.*;
 final class Split {
     final private boolean numberFormat;// -d
     final private int sizeOfOutFile;
-    final private boolean dimension;//true -> sizeInLines, false -> sizeInChars
+    final private boolean isSizeInLines;//true -> sizeInLines, false -> sizeInChars
     final private int countOfDigits;
     final private String nameOfOutFiles;
     final private String nameOfInFile;
@@ -32,19 +32,19 @@ final class Split {
         }
         //Размер выходных файлов:
         if (countOfFiles != 0) {
-            this.dimension = false;
+            this.isSizeInLines = false;
             int length = lengthOfFile();
             this.sizeOfOutFile = (length % countOfFiles) > 0 ?  (length / countOfFiles + 1) : (length / countOfFiles);
-            this.countOfFiles = countOfFiles;
+            this.countOfFiles = length < countOfFiles ? length : countOfFiles;
         } else {
             if (sizeInChars != 0) {
-                this.dimension = false;
+                this.isSizeInLines = false;
                 this.sizeOfOutFile = sizeInChars;
             } else if (sizeInLines != 0) {
-                this.dimension = true;
+                this.isSizeInLines = true;
                 this.sizeOfOutFile = sizeInLines;
             } else {
-                this.dimension = true;
+                this.isSizeInLines = true;
                 this.sizeOfOutFile = 100;
             }
             int length = lengthOfFile();
@@ -54,17 +54,20 @@ final class Split {
         this.countOfDigits = digitNumber(this.countOfFiles);
     }
 
-    void writeInFiles() throws IOException{
+    String[] writeInFiles() throws IOException{//возвращает массив имен для тестов
+        String[] namesOfOutFiles = new String[countOfFiles];
         BufferedReader br = new BufferedReader(new FileReader(this.nameOfInFile));
-        if (this.dimension){
-            String str;
+        if (this.isSizeInLines){
+            String currLine;
             for (int num = 1; num <= this.countOfFiles; num++) {
-                BufferedWriter bw = new BufferedWriter(new FileWriter(this.nameOfOutFiles + numFormat(num) + ".txt"));
+                String currName = buildName(num);
+                namesOfOutFiles[num-1] = currName;
+                BufferedWriter bw = new BufferedWriter(new FileWriter(currName));
                 bw.write(br.readLine());
                 for (int i = 1; i < this.sizeOfOutFile; i++) {
-                    if ((str = br.readLine()) != null) {
+                    if ((currLine = br.readLine()) != null) {
                         bw.newLine();
-                        bw.write(str);
+                        bw.write(currLine);
                     } else {
                         break;
                     }
@@ -73,12 +76,14 @@ final class Split {
             }
         }
         else {
-            int ch;
+            int currChar;
             for (int num = 1; num <= this.countOfFiles; num++) {
-                BufferedWriter bw = new BufferedWriter(new FileWriter(this.nameOfOutFiles + numFormat(num) + ".txt"));
+                String currName = buildName(num);
+                namesOfOutFiles[num-1] = currName;
+                BufferedWriter bw = new BufferedWriter(new FileWriter(currName));
                 for (int i = 0; i < this.sizeOfOutFile; i++) {
-                    if ((ch = br.read()) != -1) {
-                        bw.write(ch);
+                    if ((currChar = br.read()) != -1) {
+                        bw.write(currChar);
                     } else {
                         break;
                     }
@@ -86,12 +91,13 @@ final class Split {
                 bw.close();
             }
         }
+        return namesOfOutFiles;
     }
 
     private int lengthOfFile() throws IOException{
         int length = 0;
         BufferedReader br = new BufferedReader (new FileReader(this.nameOfInFile));
-        if (this.dimension) {
+        if (this.isSizeInLines) {
             while (br.readLine() != null) {
                 length++;
             }
@@ -122,28 +128,24 @@ final class Split {
         return count;
     }
 
-    private String numFormat(Integer num) {// формат x/0x/00x...
-        StringBuilder sb = new StringBuilder();
+    private String buildName(Integer num) {// формат x/0x/00x...
         if (this.numberFormat) {
-            for (int i = digitNumber(num); i < this.countOfDigits; i++){
-                sb.append("0");
-            }
-            sb.append(num.toString());
-            return sb.toString();
+            return this.nameOfOutFiles + String.format("%0" + this.countOfDigits + "d", num) +".txt";
         }
         else {
+            StringBuilder sb = new StringBuilder();
             num--;
             if (num == 0){
                 sb.append("a");
             }
             while (num != 0) {
-                sb.append((char) ((num % 26) + 97));
+                sb.append((char) ((num % 26) + 'a'));
                 num /= 26;
             }
             for (int i = sb.length(); i < this.countOfDigits; i++) {
                 sb.append("a");
             }
-            return sb.reverse().toString();
+            return this.nameOfOutFiles + sb.reverse().toString() + ".txt";
         }
     }
 }
